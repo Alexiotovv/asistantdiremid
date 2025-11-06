@@ -10,7 +10,10 @@ Route::get('/', [AsistenciaController::class, 'marcacionPublica'])->name('marcac
 Route::post('/marcar', [AsistenciaController::class, 'marcarAsistencia'])->name('marcar.asistencia');
 
 // Autenticación básica (sin frontend de Laravel)
-Auth::routes(['verify' => false]);
+// Auth::routes(['verify' => false]);
+Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [App\Http\Controllers\Auth\LoginController::class, 'login']);
+Route::post('/logout', [App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
 
 // PROTEGIDAS
 Route::middleware(['auth'])->group(function () {
