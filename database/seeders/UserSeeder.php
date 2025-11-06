@@ -13,8 +13,8 @@ class UserSeeder extends Seeder
         // Crear usuario administrador
         User::create([
             'name' => 'Administrador',
-            'email' => 'admin@example.com',
-            'password' => Hash::make('12345678'),
+            'email' => 'admin@diremid.com',
+            'password' => Hash::make('admindire#8973'),
             'role' => 'admin',
             'dni' => '00000001',
             'nombre_completo' => 'Administrador del Sistema',
@@ -25,8 +25,8 @@ class UserSeeder extends Seeder
         // Opcional: Crear usuarios de ejemplo para pruebas
         User::create([
             'name' => 'Empleado 1',
-            'email' => 'empleado1@example.com',
-            'password' => Hash::make('12345678'),
+            'email' => 'empleado1@diremid.com',
+            'password' => Hash::make('admindire#24123'),
             'role' => 'personal',
             'dni' => '12345678',
             'nombre_completo' => 'Juan Pérez',
@@ -37,7 +37,7 @@ class UserSeeder extends Seeder
         User::create([
             'name' => 'Empleado 2',
             'email' => 'empleado2@example.com',
-            'password' => Hash::make('12345678'),
+            'password' => Hash::make('admindire#24123'),
             'role' => 'personal',
             'dni' => '87654321',
             'nombre_completo' => 'María López',
