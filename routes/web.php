@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\LicenciaController;
 
 // PÚBLICO: Marcación sin login
 Route::get('/', [AsistenciaController::class, 'marcacionPublica'])->name('marcacion.publica');
@@ -25,5 +26,18 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/usuario/crear', [AdminController::class, 'crearUsuario'])->name('usuario.crear');
         Route::put('/usuario/{id}/editar', [AdminController::class, 'editarUsuario'])->name('usuario.editar');
         Route::delete('/usuario/{id}/eliminar', [AdminController::class, 'eliminarUsuario'])->name('usuario.eliminar');
+
+        // Rutas de Licencias
+        Route::prefix('licencias')->name('licencias.')->group(function () {
+            Route::get('/', [LicenciaController::class, 'index'])->name('index');
+            Route::get('/crear', [LicenciaController::class, 'create'])->name('create');
+            Route::post('/', [LicenciaController::class, 'store'])->name('store');
+            Route::get('/{licencia}/editar', [LicenciaController::class, 'edit'])->name('edit');
+            Route::put('/{licencia}', [LicenciaController::class, 'update'])->name('update');
+            Route::delete('/{licencia}', [LicenciaController::class, 'destroy'])->name('destroy');
+            Route::patch('/{licencia}/toggle-status', [LicenciaController::class, 'toggleStatus'])->name('toggle-status');
+        });
+
+        
     });
 });

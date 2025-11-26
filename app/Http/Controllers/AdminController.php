@@ -20,15 +20,41 @@ class AdminController extends Controller
 
         $mes = $request->get('mes', now()->month);
         $anio = $request->get('anio', now()->year);
+        $usuario_id = $request->get('usuario');
+        $oficina = $request->get('oficina');
 
-        if (!checkdate($mes, 1, $anio)) return response('Fecha inválida', 400);
+        if (!checkdate($mes, 1, $anio)) {
+            return redirect()->back()->with('error', 'Fecha inválida');
+        }
 
-        // Obtener usuarios y generar datos
-        $usuarios = User::where('role', 'personal')->get();
+        // Obtener usuarios con filtros
+        $query = User::where('role', 'personal');
+        
+        if ($usuario_id) {
+            $query->where('id', $usuario_id);
+        }
+        
+        if ($oficina) {
+            $query->where('oficina', $oficina);
+        }
+        
+        $usuarios = $query->get();
+
+        // Obtener lista de oficinas para el filtro
+        $oficinas = User::where('role', 'personal')
+                       ->whereNotNull('oficina')
+                       ->distinct()
+                       ->pluck('oficina')
+                       ->filter()
+                       ->values();
+
+        // Generar días del mes
         $dias_mes = [];
         for ($d = 1; $d <= 31; $d++) {
             try {
-                $dias_mes[] = new \DateTime("{$anio}-{$mes}-{$d}");
+                $fecha = new \DateTime("{$anio}-{$mes}-{$d}");
+                if ($fecha->format('m') != $mes) break; // Evitar días del mes siguiente
+                $dias_mes[] = $fecha;
             } catch (\Exception $e) {
                 break;
             }
@@ -53,10 +79,8 @@ class AdminController extends Controller
                 $salida = $marcaciones->firstWhere('tipo', 'salida');
 
                 $texto = "";
-                if ($entrada) $texto .= "E:{$entrada->hora}";
-                if ($salida)  $texto .= " S:{$salida->hora}";
-                // if ($entrada) $texto .= "E:{$entrada->hora->format('H:i')}";
-                // if ($salida)  $texto .= " S:{$salida->hora->format('H:i')}";
+                if ($entrada) $texto .= "E:" . substr($entrada->hora, 0, 5);
+                if ($salida)  $texto .= $texto ? " S:" . substr($salida->hora, 0, 5) : "S:" . substr($salida->hora, 0, 5);
 
                 $fila['dias'][] = $texto;
             }
@@ -64,7 +88,14 @@ class AdminController extends Controller
             $resultados[] = $fila;
         }
 
-        return view('admin.reporte-asistencia', compact('resultados', 'dias_mes', 'mes', 'anio'));
+        return view('admin.reporte-filtros', compact(
+            'resultados', 
+            'dias_mes', 
+            'mes', 
+            'anio', 
+            'usuarios',
+            'oficinas'
+        ));
     }
 
 

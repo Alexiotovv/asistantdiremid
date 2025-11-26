@@ -1,4 +1,4 @@
-@extends('asistencia.base-dashboard')
+@extends('layouts.base')
 
 @section('content')
 <h2>Gestión de Usuarios</h2>
