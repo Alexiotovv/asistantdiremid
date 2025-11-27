@@ -21,6 +21,7 @@ class User extends Authenticatable
         'nombre_completo',
         'oficina',
         'clave_pin',
+        'status' 
     ];
 
     protected $hidden = ['password', 'remember_token'];

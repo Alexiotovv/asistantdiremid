@@ -59,7 +59,8 @@
                         <button type="submit" class="btn btn-primary">🔍 Generar Reporte</button>
                         <a href="{{ route('admin.reporte.html') }}" class="btn btn-secondary">🔄 Limpiar Filtros</a>
                         @if(isset($resultados) && count($resultados) > 0)
-                            <button type="button" class="btn btn-success" onclick="window.print()">🖨️ Imprimir / PDF</button>
+                            <button type="button" class="btn btn-success" onclick="exportarExcelReal()">📊 Exportar Excel</button>
+                            <button type="button" class="btn btn-info" onclick="window.print()">🖨️ Imprimir / PDF</button>
                         @endif
                     </div>
                 </div>
@@ -79,14 +80,18 @@
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
-                    <table class="table table-bordered table-striped table-sm mb-0">
+                    <table class="table table-bordered table-striped table-sm mb-0" id="tablaReporte">
                         <thead class="table-light sticky-top">
                             <tr>
                                 <th>DNI</th>
                                 <th>Nombre Completo</th>
                                 <th>Oficina</th>
                                 @foreach($dias_mes as $dia)
-                                    <th class="text-center" style="min-width: 80px;">
+                                    @php
+                                        $esFinDeSemana = $dia->format('N') >= 6; // 6 = sábado, 7 = domingo
+                                        $claseHeader = $esFinDeSemana ? 'header-fin-semana' : '';
+                                    @endphp
+                                    <th class="text-center {{ $claseHeader }}" style="min-width: 80px;">
                                         {{ $dia->format('d') }}<br>
                                         <small class="text-muted">{{ $dia->format('D') }}</small>
                                     </th>
@@ -100,9 +105,20 @@
                                     <td>{{ $fila['nombre_completo'] }}</td>
                                     <td>{{ $fila['oficina'] }}</td>
                                     @foreach($fila['dias'] as $diaIndex => $dia)
-                                        <td class="small">
+                                        @php
+                                            $fechaDia = $dias_mes[$diaIndex];
+                                            $esFinDeSemana = $fechaDia->format('N') >= 6;
+                                            $esLicencia = str_contains($dia, 'LIC:');
+                                            $claseCelda = $esFinDeSemana ? 'celda-fin-semana' : '';
+                                            $claseCelda .= $esLicencia ? ' celda-licencia' : '';
+                                        @endphp
+                                        <td class="small {{ $claseCelda }}">
                                             @if(!empty($dia))
-                                                <div class="text-success">{!! str_replace(['E:', 'S:'], ['<strong>E:</strong>', '<br><strong>S:</strong>'], $dia) !!}</div>
+                                                @if($esLicencia)
+                                                    <div class="texto-licencia">{!! str_replace(['LIC:'], ['<strong>LIC:</strong>'], $dia) !!}</div>
+                                                @else
+                                                    <div class="text-success">{!! str_replace(['E:', 'S:'], ['<strong>E:</strong>', '<br><strong>S:</strong>'], $dia) !!}</div>
+                                                @endif
                                             @else
                                                 <span class="text-muted">-</span>
                                             @endif
@@ -112,6 +128,26 @@
                             @endforeach
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leyenda de colores -->
+        <div class="card mt-3 no-print">
+            <div class="card-body py-2">
+                <div class="row">
+                    <div class="col-md-6">
+                        <small>
+                            <span class="badge bg-danger me-2">🔴</span>
+                            <strong>Sábados y Domingos:</strong> Días no laborables
+                        </small>
+                    </div>
+                    <div class="col-md-6">
+                        <small>
+                            <span class="badge bg-success me-2">🟢</span>
+                            <strong>Licencias:</strong> Permisos aprobados
+                        </small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -128,7 +164,7 @@
 
 <style>
     @media print {
-        .btn, .card-header, .alert { display: none !important; }
+        .btn, .card-header, .alert, .no-print { display: none !important; }
         body { font-size: 12px; }
         .table { border: 1px solid #000; }
         th, td { border: 1px solid #000 !important; }
@@ -145,5 +181,86 @@
         position: sticky;
         top: 0;
     }
+    
+    /* Encabezados de fin de semana - Rojo más oscuro */
+    .header-fin-semana {
+        background-color: #ffcccc !important;
+        color: #cc0000;
+        font-weight: bold;
+    }
+    
+    /* Celdas de fin de semana - Rojo muy claro */
+    .celda-fin-semana {
+        background-color: #fff5f5 !important;
+    }
+    
+    /* Celdas de licencias - Verde */
+    .celda-licencia {
+        background-color: #f0fff0 !important;
+    }
+    
+    /* Texto de licencias */
+    .texto-licencia {
+        color: #006600;
+        font-weight: bold;
+    }
+    
+    /* Asegurar que los colores se mantengan al imprimir */
+    @media print {
+        .header-fin-semana {
+            background-color: #ffcccc !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .celda-fin-semana {
+            background-color: #fff5f5 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .celda-licencia {
+            background-color: #f0fff0 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+    }
 </style>
+
+<!-- INCLUIR SheetJS -->
+<script src="{{asset('js/plugins/xlsx-0-18-5-full.min.js')}}"></script>
+
+<script>
+function exportarExcelReal() {
+    try {
+        // Obtener la tabla por ID
+        const tabla = document.getElementById('tablaReporte');
+        
+        if (!tabla) {
+            alert('❌ No se encontró la tabla para exportar');
+            return;
+        }
+
+        // Crear libro de Excel desde la tabla
+        const wb = XLSX.utils.table_to_book(tabla, {sheet: "Reporte Asistencias"});
+        
+        // Generar nombre del archivo con fecha
+        const fecha = new Date().toISOString().split('T')[0];
+        const nombreArchivo = `reporte_asistencias_{{ $anio }}_{{ $mes }}_${fecha}.xlsx`;
+        
+        // Descargar archivo
+        XLSX.writeFile(wb, nombreArchivo);
+        
+        console.log('✅ Archivo Excel exportado correctamente');
+        
+    } catch (error) {
+        console.error('❌ Error al exportar Excel:', error);
+        alert('❌ Error al exportar el archivo Excel: ' + error.message);
+    }
+}
+
+// También puedes agregar un event listener para debug
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ SheetJS cargado correctamente');
+    console.log('✅ Tabla disponible:', document.getElementById('tablaReporte'));
+});
+</script>
 @endsection

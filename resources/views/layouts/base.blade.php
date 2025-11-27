@@ -1,11 +1,23 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'Sistema de Asistencia')</title>
-    <!-- Bootstrap 5 CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>@yield('title', 'Sistema de Asistencia')</title>
+        <!-- Bootstrap 5 CDN -->
+        <link href="{{asset('css/bootstrap/bootstrap5.3.2.min.css')}}" rel="stylesheet">
+        <link href="{{asset('css/select2/select2.min.css')}}" rel="stylesheet" />
+        <script src="{{asset('js/jquery-3.6.0.min.js')}}"></script>
+        <style>
+            .select2-container--default .select2-selection--single {
+                border: 1px solid #ced4da;
+                height: 38px;
+                padding: 5px;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px;
+    }
+    </style>
     <style>
         body { 
             min-height: 100vh; 
@@ -237,10 +249,7 @@
             </a>
 
             @if(auth()->user()->role === 'admin')
-            <!-- Gestión de Usuarios -->
-            <a class="nav-link {{ request()->routeIs('admin.gestion.usuarios') ? 'active' : '' }}" href="{{ route('admin.gestion.usuarios') }}">
-                👥 <span class="sidebar-text">Gestión de Usuarios</span>
-            </a>
+            
 
             <!-- Reportes de Asistencia -->
             <a class="nav-link {{ request()->routeIs('admin.reporte.html') ? 'active' : '' }}" href="{{ route('admin.reporte.html') }}">
@@ -252,31 +261,39 @@
                 <a class="nav-link {{ request()->get('tipo') == 'mensual' ? 'active' : '' }}" href="{{ route('admin.reporte.html', ['mes' => now()->month, 'anio' => now()->year]) }}">
                     📅 <span class="sidebar-text">Reporte Mensual</span>
                 </a>
-                
-                <a class="nav-link {{ request()->get('tipo') == 'diario' ? 'active' : '' }}" href="#">
-                    📋 <span class="sidebar-text">Reporte Diario</span>
+                <!-- Marcación Pública -->
+                <a class="nav-link {{ request()->routeIs('marcacion.publica') ? 'active' : '' }}" href="{{ route('marcacion.publica') }}">
+                    ⏰ <span class="sidebar-text">Marcar Asistencia</span>
                 </a>
+                
+                {{-- <a class="nav-link {{ request()->get('tipo') == 'diario' ? 'active' : '' }}" href="#">
+                    📋 <span class="sidebar-text">Reporte Diario</span>
+                </a> --}}
             </div>
-            @endif
-
-            <!-- Marcación Pública -->
-            <a class="nav-link {{ request()->routeIs('marcacion.publica') ? 'active' : '' }}" href="{{ route('marcacion.publica') }}">
-                ⏰ <span class="sidebar-text">Marcar Asistencia</span>
+            <a class="nav-link {{ request()->routeIs('admin.permisos.*') ? 'active' : '' }}" 
+                href="{{ route('admin.permisos.index') }}">
+                📝 <span class="sidebar-text">Gestión de Permisos</span>
             </a>
             <!-- En el menú lateral, después de Gestión de Usuarios -->
             <a class="nav-link {{ request()->routeIs('admin.licencias.*') ? 'active' : '' }}" 
             href="{{ route('admin.licencias.index') }}">
             📑 <span class="sidebar-text">Gestión de Licencias</span>
             </a>
+            <!-- Gestión de Usuarios -->
+            <a class="nav-link {{ request()->routeIs('admin.gestion.usuarios') ? 'active' : '' }}" href="{{ route('admin.gestion.usuarios') }}">
+                👥 <span class="sidebar-text">Gestión de Usuarios</span>
+            </a>
+            @endif
+
             <!-- Separador -->
-            <div class="sidebar-header mt-4">
+            {{-- <div class="sidebar-header mt-4">
                 <small class="text-light opacity-75">⚙️ CONFIGURACIÓN</small>
-            </div>
+            </div> --}}
 
             <!-- Perfil -->
-            <a class="nav-link" href="#">
+            {{-- <a class="nav-link" href="#">
                 🔧 <span class="sidebar-text">Mi Perfil</span>
-            </a>
+            </a> --}}
 
             <!-- Cerrar Sesión -->
             <a class="nav-link text-warning" href="{{ route('logout') }}">
@@ -362,6 +379,10 @@
     });
 </script>
 
+<script src="{{asset('js/plugins/select2/select2.min.js')}}"></script>
+<script src="{{asset('js/plugins/select2/i18n-es.js')}}"></script>
+
 @yield('extra_js')
+
 </body>
 </html>
